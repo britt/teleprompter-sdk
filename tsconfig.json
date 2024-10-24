@@ -6,16 +6,13 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "baseUrl": ".",
     "types": [
       "@cloudflare/workers-types",
       "jest"
     ],
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     }
   },
