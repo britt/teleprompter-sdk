@@ -187,4 +187,6 @@ export namespace Teleprompter {
   }
 }
 
+export default Teleprompter
+
 
