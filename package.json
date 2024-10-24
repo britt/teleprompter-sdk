@@ -11,12 +11,13 @@
   "author": "Britt Crawford <britt.v.crawford@gmail.com>",
   "license": "MIT",
   "description": "",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
