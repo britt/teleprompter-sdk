@@ -9,6 +9,10 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": ".",
+    "types": [
+      "@cloudflare/workers-types",
+      "jest"
+    ],
     "paths": {
       "@/*": [
         "src/*"
