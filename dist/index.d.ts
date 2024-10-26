@@ -47,6 +47,9 @@ export declare namespace Teleprompter {
             type: 'prompt-delete';
         }
     }
+    export function DeleteMessage(id: string): Messages.PromptDelete;
+    export function UpdateMessage(prompt: Prompt): Messages.PromptUpdate;
+    export function SendUpdates(env: Teleprompter.ENV, messages: (Messages.PromptDelete | Messages.PromptUpdate)[]): Promise<void>;
     /**
      * Teleprompter HTTP SDK
      */

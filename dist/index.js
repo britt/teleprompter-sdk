@@ -3,6 +3,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Teleprompter = void 0;
 var Teleprompter;
 (function (Teleprompter) {
+    function DeleteMessage(id) {
+        return {
+            id,
+            type: 'prompt-delete'
+        };
+    }
+    Teleprompter.DeleteMessage = DeleteMessage;
+    function UpdateMessage(prompt) {
+        return {
+            ...prompt,
+            type: 'prompt-update'
+        };
+    }
+    Teleprompter.UpdateMessage = UpdateMessage;
+    async function SendUpdates(env, messages) {
+        return env.TELEPROMPTER_UPDATES.sendBatch(messages.map((message) => {
+            return {
+                body: message,
+                contentType: 'json'
+            };
+        }));
+    }
+    Teleprompter.SendUpdates = SendUpdates;
     /**
      * Teleprompter HTTP SDK
      */
