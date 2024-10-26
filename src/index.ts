@@ -51,6 +51,29 @@ export namespace Teleprompter {
     }
   }
 
+  export function DeleteMessage(id: string): Messages.PromptDelete {
+    return {
+      id,
+      type: 'prompt-delete'
+    }
+  }
+
+  export  function UpdateMessage(prompt: Prompt): Messages.PromptUpdate {
+    return {
+      ...prompt,
+      type: 'prompt-update'
+    }
+  }
+
+  export async function SendUpdates(env: Teleprompter.ENV, messages: (Messages.PromptDelete | Messages.PromptUpdate)[]): Promise<void> {
+    return env.TELEPROMPTER_UPDATES.sendBatch(messages.map((message) => {
+      return {
+        body: message,
+        contentType: 'json'
+      }
+    }))
+  }
+
   /**
    * Teleprompter HTTP SDK
    */
