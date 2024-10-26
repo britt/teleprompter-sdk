@@ -14,7 +14,6 @@ export declare namespace Teleprompter {
     interface PromptInput {
         id: string;
         prompt: string;
-        namespace: string;
     }
     interface ENV {
         TELEPROMPTER_UPDATES: Queue<Messages.PromptDelete | Messages.PromptUpdate>;
