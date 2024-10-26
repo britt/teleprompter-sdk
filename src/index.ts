@@ -3,6 +3,9 @@
  * 
  * This SDK provides methods to interact with the Teleprompter service.
  */
+
+import Mustache from 'mustache'
+
 interface Fetcher {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
@@ -197,6 +200,14 @@ export namespace Teleprompter {
 
     async get(id: string): Promise<Prompt | null> {
       return this.KV.get<Prompt>(id, 'json')
+    }
+
+    async render(id: string, ctx: any): Promise<string> {
+      const prompt = await this.get(id)
+      if (prompt === null) {
+        throw new Error(`Prompt '${id}' not found`)
+      }
+      return Mustache.render(prompt?.prompt, ctx)
     }
   }
 }
