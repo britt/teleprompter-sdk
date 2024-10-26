@@ -7,9 +7,6 @@
     "start": "node dist/index.js",
     "docs": "typedoc --out docs src"
   },
-  "conditions": [
-    "types"
-  ],
   "keywords": [],
   "author": "Britt Crawford <britt.v.crawford@gmail.com>",
   "license": "MIT",
