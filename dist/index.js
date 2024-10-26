@@ -17,15 +17,6 @@ var Teleprompter;
         };
     }
     Teleprompter.UpdateMessage = UpdateMessage;
-    async function SendUpdates(env, messages) {
-        return env.TELEPROMPTER_UPDATES.sendBatch(messages.map((message) => {
-            return {
-                body: message,
-                contentType: 'json'
-            };
-        }));
-    }
-    Teleprompter.SendUpdates = SendUpdates;
     /**
      * Teleprompter HTTP SDK
      */

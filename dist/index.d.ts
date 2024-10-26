@@ -11,11 +11,12 @@ export declare namespace Teleprompter {
      * PromptInput specifies a new prompt.
      * @interface PromptInput
      */
-    export interface PromptInput {
+    interface PromptInput {
         id: string;
         prompt: string;
+        namespace: string;
     }
-    export interface ENV {
+    interface ENV {
         TELEPROMPTER_UPDATES: Queue<Messages.PromptDelete | Messages.PromptUpdate>;
         PROMPTS: KVNamespace;
     }
@@ -23,14 +24,14 @@ export declare namespace Teleprompter {
      * Prompt is a versioned LLM prompt referenced by id.
      * @interface Prompt
      **/
-    export interface Prompt extends PromptInput {
+    interface Prompt extends PromptInput {
         version: number;
     }
     /**
     * TeleprompterSDK is an interface for interacting with a teleprompter service.
     * @interface TeleprompterSDK
     */
-    export interface TeleprompterSDK {
+    interface TeleprompterSDK {
         listPrompts(): Promise<Prompt[]>;
         getPrompt(id: string): Promise<Prompt>;
         getPromptVersions(id: string): Promise<Prompt[]>;
@@ -47,13 +48,12 @@ export declare namespace Teleprompter {
             type: 'prompt-delete';
         }
     }
-    export function DeleteMessage(id: string): Messages.PromptDelete;
-    export function UpdateMessage(prompt: Prompt): Messages.PromptUpdate;
-    export function SendUpdates(env: Teleprompter.ENV, messages: (Messages.PromptDelete | Messages.PromptUpdate)[]): Promise<void>;
+    function DeleteMessage(id: string): Messages.PromptDelete;
+    function UpdateMessage(prompt: Prompt): Messages.PromptUpdate;
     /**
      * Teleprompter HTTP SDK
      */
-    export class HTTP implements TeleprompterSDK {
+    class HTTP implements TeleprompterSDK {
         private baseUrl?;
         private binding?;
         constructor(urlOrBinding: string | Fetcher);
@@ -83,13 +83,12 @@ export declare namespace Teleprompter {
          */
         rollbackPrompt(id: string, version: number): Promise<void>;
     }
-    export function HandleUpdates(batch: MessageBatch<Messages.PromptUpdate | Messages.PromptDelete>, env: Teleprompter.ENV, ctx: ExecutionContext): Promise<void>;
-    export class KV {
+    function HandleUpdates(batch: MessageBatch<Messages.PromptUpdate | Messages.PromptDelete>, env: Teleprompter.ENV, ctx: ExecutionContext): Promise<void>;
+    class KV {
         private KV;
         constructor(env: Teleprompter.ENV);
         list(): Promise<Prompt[]>;
         get(id: string): Promise<Prompt | null>;
     }
-    export {};
 }
 export default Teleprompter;
