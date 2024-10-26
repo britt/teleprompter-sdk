@@ -65,8 +65,8 @@ export namespace Teleprompter {
     }
   }
 
-  export async function SendUpdates(env: Teleprompter.ENV, messages: (Messages.PromptDelete | Messages.PromptUpdate)[]): Promise<void> {
-    return env.TELEPROMPTER_UPDATES.sendBatch(messages.map((message) => {
+  export async function SendUpdates(q: Queue, messages: (Messages.PromptDelete | Messages.PromptUpdate)[]): Promise<void> {
+    return q.sendBatch(messages.map((message) => {
       return {
         body: message,
         contentType: 'json'
