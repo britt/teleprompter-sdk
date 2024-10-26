@@ -65,15 +65,6 @@ export namespace Teleprompter {
     }
   }
 
-  export async function SendUpdates(q: Queue, messages: (Messages.PromptDelete | Messages.PromptUpdate)[]): Promise<void> {
-    return q.sendBatch(messages.map((message) => {
-      return {
-        body: message,
-        contentType: 'json'
-      }
-    }))
-  }
-
   /**
    * Teleprompter HTTP SDK
    */
