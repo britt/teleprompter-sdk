@@ -41,7 +41,7 @@ export namespace Teleprompter {
    rollbackPrompt(id: string, version: number): Promise<void>
  }
 
-  namespace Messages {
+  export namespace Messages {
     export interface PromptUpdate extends Teleprompter.Prompt {
       type: 'prompt-update'
     }
