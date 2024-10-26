@@ -88,6 +88,7 @@ export declare namespace Teleprompter {
         constructor(env: Teleprompter.ENV);
         list(): Promise<Prompt[]>;
         get(id: string): Promise<Prompt | null>;
+        render(id: string, ctx: any): Promise<string>;
     }
 }
 export default Teleprompter;
