@@ -16,7 +16,6 @@ export declare namespace Teleprompter {
         prompt: string;
     }
     interface ENV {
-        TELEPROMPTER_UPDATES: Queue<Messages.PromptDelete | Messages.PromptUpdate>;
         PROMPTS: KVNamespace;
     }
     /**
