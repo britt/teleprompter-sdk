@@ -6,7 +6,7 @@
 
 import Mustache from 'mustache'
 
-interface Fetcher {
+export interface Fetcher {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
 

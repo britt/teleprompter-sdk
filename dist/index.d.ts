@@ -3,7 +3,7 @@
  *
  * This SDK provides methods to interact with the Teleprompter service.
  */
-interface Fetcher {
+export interface Fetcher {
     fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
 export declare namespace Teleprompter {
