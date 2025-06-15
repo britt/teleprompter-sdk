@@ -5,7 +5,7 @@
     "test": "jest",
     "build": "tsc",
     "start": "node dist/index.js",
-    "docs": "typedoc --out docs src"
+    "docs": "typedoc"
   },
   "keywords": [],
   "author": "Britt Crawford <britt.v.crawford@gmail.com>",
