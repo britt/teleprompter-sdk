@@ -1,16 +1,10 @@
-"use strict";
 /**
  * Teleprompter SDK
  *
  * This SDK provides methods to interact with the Teleprompter service.
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Teleprompter = void 0;
-const mustache_1 = __importDefault(require("mustache"));
-var Teleprompter;
+import Mustache from 'mustache';
+export var Teleprompter;
 (function (Teleprompter) {
     function DeleteMessage(id) {
         return {
@@ -156,9 +150,9 @@ var Teleprompter;
             if (prompt === null) {
                 throw new Error(`Prompt '${id}' not found`);
             }
-            return mustache_1.default.render(prompt?.prompt, ctx);
+            return Mustache.render(prompt?.prompt, ctx);
         }
     }
     Teleprompter.KV = KV;
-})(Teleprompter || (exports.Teleprompter = Teleprompter = {}));
-exports.default = Teleprompter;
+})(Teleprompter || (Teleprompter = {}));
+export default Teleprompter;

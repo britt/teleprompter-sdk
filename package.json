@@ -1,6 +1,7 @@
 {
   "name": "teleprompter-sdk",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "build": "tsc",
