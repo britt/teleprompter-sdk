@@ -36,6 +36,8 @@ const output = await kv.render('welcome-email', { name: 'Ada' });
 - `npm test` – run unit tests
 - `npm run docs` – generate TypeDoc documentation to the `docs/` folder
 
+Continuous integration automatically runs `npm test` on every pull request.
+
 Before generating docs, ensure that a Git remote named `origin` points to the repository so source links work correctly. You can set this with:
 
 ```bash
