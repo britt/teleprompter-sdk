@@ -103,8 +103,6 @@ Install dependencies with `npm install` and then run the scripts above as needed
 
 ---
 
-## Summary
+## License
 
-- Use the HTTP client (`Teleprompter.HTTP`) to programmatically manage, version, and fetch prompts from a remote API.
-- Use the KV client (`Teleprompter.KV`) to quickly render prompts stored in (and distributed by) Cloudflare Workers KV.
-- The SDK is designed for performance, transparency, and flexibility in modern LLM-powered applications.
+This project is licensed under the [MIT License](./LICENSE).
