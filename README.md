@@ -1,6 +1,6 @@
 # Teleprompter SDK
 
-Teleprompter SDK is a TypeScript/JavaScript client library designed for developers working with prompt management APIs and infrastructure for LLM (Large Language Model) applications. The SDK provides utilities to interact with Teleprompter-compatible APIs over HTTP, as well as convenient helpers to fetch and render prompt templates stored in a Cloudflare KV namespace—making it suitable for both backend and edge/serverless environments.
+Teleprompter SDK is a TypeScript/JavaScript client library that enables developers to work with prompt management APIs and infrastructure provided by the Teleprompter platform. The SDK offers utilities to interact with Teleprompter APIs either over HTTP or by fetching and rendering prompt templates stored directly in a Cloudflare KV namespace, making it suitable for backend as well as edge/serverless environments.
 
 ## Concepts: HTTP and KV Clients
 
