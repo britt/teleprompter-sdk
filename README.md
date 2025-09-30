@@ -103,10 +103,12 @@ Install dependencies with `npm install` and then run the scripts above as needed
 
 ---
 
-## License
+## Co-authors
 
-This project is licensed under the [MIT License](./LICENSE).
+- doc.holiday
 
 ---
 
-*This README is co-authored by [doc.holiday](https://doc.holiday).*
+## License
+
+This project is licensed under the [MIT License](./LICENSE).
