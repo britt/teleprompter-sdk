@@ -105,7 +105,7 @@ Install dependencies with `npm install` and then run the scripts above as needed
 
 ## Co-authors
 
-- doc.holiday
+- [doc.holiday](https://doc.holiday)
 
 ---
 
