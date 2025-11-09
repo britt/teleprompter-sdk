@@ -11,10 +11,8 @@ Teleprompter SDK is a TypeScript/JavaScript client library that enables develope
 
 ### Versioning system
 - Each prompt version is the UNIX timestamp (UTC) at the moment the version is created.
-- Versions increase over time.
-- Use the version value for:
-  - Rollbacks: pass the target version timestamp to `rollbackPrompt(id, version)`.
-  - Caching and coordination: key caches by `id` and `version`; newer timestamps supersede older ones.
+- Versions increase over time for a given prompt.
+- Versions are assigned automatically by the service; clients do not choose version numbers.
 
 ### Update messaging
 - For queue-based workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version })` and deletions with `Teleprompter.DeleteMessage(id)`.
