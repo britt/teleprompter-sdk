@@ -9,6 +9,14 @@ Teleprompter SDK is a TypeScript/JavaScript client library that enables develope
 - You can list a prompt’s history with `getPromptVersions(id)` and target a prior version with `rollbackPrompt(id, version)`.
 - This model preserves auditability and makes rollbacks predictable.
 
+### Versioning system
+- Each prompt version is the UNIX timestamp (UTC) at the moment the version is created.
+- Versions increase over time and are unique per prompt.
+- Use the version value for:
+  - Rollbacks: pass the target version timestamp to `rollbackPrompt(id, version)`.
+  - Caching and coordination: key caches by `id` and `version`; newer timestamps supersede older ones.
+- Do not hand-pick sequential integers. Use the timestamp assigned when the version is created by your system of record (for example, your API service).
+
 ### Update messaging
 - For queue-based workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version })` and deletions with `Teleprompter.DeleteMessage(id)`.
 - A queue consumer applies changes by calling `Teleprompter.HandleUpdates(batch, env, ctx)`, which writes updates to the `PROMPTS` KV namespace or deletes keys.
@@ -19,7 +27,7 @@ Teleprompter SDK is a TypeScript/JavaScript client library that enables develope
 const msg = Teleprompter.UpdateMessage({
   id: 'welcome-email',
   prompt: 'Welcome, {{name}}!',
-  version: 2
+  version: 1731166505 // UNIX timestamp (UTC)
 })
 await queue.send(msg)
 
@@ -97,7 +105,7 @@ const prompt = await client.getPrompt('welcome-email');
 await client.writePrompt({ id: 'welcome-email', prompt: 'Welcome, {{name}}!' });
 
 // Roll back a prompt to a previous version
-await client.rollbackPrompt('welcome-email', 3);
+await client.rollbackPrompt('welcome-email', 1731166505); // UNIX timestamp (UTC)
 ```
 
 #### Advanced: Using a Fetcher Binding
