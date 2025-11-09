@@ -2,7 +2,46 @@
 
 Teleprompter SDK is a TypeScript/JavaScript client library that enables developers to work with prompt management APIs and infrastructure provided by the Teleprompter platform. The SDK offers utilities to interact with Teleprompter APIs either over HTTP or by fetching and rendering prompt templates stored directly in a Cloudflare KV namespace, making it suitable for backend as well as edge/serverless environments.
 
-## Concepts: HTTP and KV Clients
+## Concepts
+
+### Immutable updates
+- Prompts are versioned and append-only. Each write creates a new version; existing versions never change.
+- You can list a prompt’s history with `getPromptVersions(id)` and target a prior version with `rollbackPrompt(id, version)`.
+- This model preserves auditability and makes rollbacks predictable.
+
+### Versioning system
+- Each prompt version is the UNIX timestamp (UTC) at the moment the version is created.
+- Versions increase over time for a given prompt.
+- Versions are assigned automatically by the service; clients do not choose version numbers.
+
+### Update messaging
+- For queue-based workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version })` and deletions with `Teleprompter.DeleteMessage(id)`.
+- A queue consumer applies changes by calling `Teleprompter.HandleUpdates(batch, env, ctx)`, which writes updates to the `PROMPTS` KV namespace or deletes keys.
+- Running applications that read from KV see the latest prompt on their next fetch; no restart is required.
+
+```ts
+// Publish an update
+const msg = Teleprompter.UpdateMessage({
+  id: 'welcome-email',
+  prompt: 'Welcome, {{name}}!',
+  version: 1731166505 // UNIX timestamp (UTC)
+})
+await queue.send(msg)
+
+// Apply updates in a Worker queue consumer
+export default {
+  async queue(batch, env, ctx) {
+    await Teleprompter.HandleUpdates(batch, env, ctx)
+  }
+}
+```
+
+### Caching
+- The KV client reads prompt data by ID and renders with Mustache at the edge for low latency.
+- Cloudflare KV is eventually consistent; updates propagate quickly but are not instantaneous. Design caches to tolerate brief propagation delays.
+- If you add an application cache, key entries by `id` and `version`. Evict or refresh when a newer version is written. The SDK does not add an extra in-memory cache.
+
+## Clients
 
 The library exposes two primary client types, targeting different use cases and environments:
 
@@ -63,7 +102,7 @@ const prompt = await client.getPrompt('welcome-email');
 await client.writePrompt({ id: 'welcome-email', prompt: 'Welcome, {{name}}!' });
 
 // Roll back a prompt to a previous version
-await client.rollbackPrompt('welcome-email', 3);
+await client.rollbackPrompt('welcome-email', 1731166505); // UNIX timestamp (UTC)
 ```
 
 #### Advanced: Using a Fetcher Binding
