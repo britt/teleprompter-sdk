@@ -36,6 +36,12 @@ npm install teleprompter-sdk
 
 ---
 
+## Prerequisites
+
+- Bun installed to run project scripts and tests locally. Install from https://bun.sh.
+
+---
+
 ## Documentation
 
 Full API documentation is available at [https://britt.github.io/teleprompter-sdk/](https://britt.github.io/teleprompter-sdk/)
