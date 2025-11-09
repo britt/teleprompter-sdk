@@ -29,8 +29,16 @@ This dual-client approach gives you flexibility to manage, distribute, and consu
 ## Installation
 
 ```bash
+bun add teleprompter-sdk
+# or
 npm install teleprompter-sdk
 ```
+
+---
+
+## Documentation
+
+Full API documentation is available at [https://britt.github.io/teleprompter-sdk/](https://britt.github.io/teleprompter-sdk/)
 
 ---
 
@@ -83,23 +91,35 @@ This looks up the `welcome-email` prompt template in the `PROMPTS` namespace and
 
 ## Scripts
 
-- `npm run build` – Compile TypeScript source
-- `npm test` – Run unit tests
-- `npm run docs` – Generate TypeDoc documentation to the `docs/` folder
+- `bun run build` – Compile TypeScript source
+- `bun test` – Run unit tests
+- `bun test --coverage` – Run tests with coverage report
+- `bun run docs` – Generate TypeDoc documentation to the `docs/` folder
 
-Continuous integration automatically runs `npm test` on every pull request.
-
-Before generating docs, ensure that a Git remote named `origin` points to the repository so source links work correctly. You can set this with:
-
-```bash
-git remote add origin https://github.com/britt/teleprompter-sdk.git
-```
+Continuous integration automatically runs tests on every pull request.
 
 ---
 
 ## Development
 
-Install dependencies with `npm install` and then run the scripts above as needed.
+This project uses [Bun](https://bun.sh) as its runtime and package manager.
+
+Install dependencies:
+```bash
+bun install
+```
+
+Run tests:
+```bash
+bun test
+```
+
+Generate documentation:
+```bash
+bun run docs
+```
+
+Documentation is automatically published to GitHub Pages from the `docs/` directory.
 
 ---
 
