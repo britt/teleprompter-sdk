@@ -5,6 +5,11 @@
  */
 
 import Mustache from 'mustache'
+import type { PromptMetadata, ParsedDotprompt, ValidationResult } from './types'
+import { parseDotprompt } from './parser'
+
+export type { PromptMetadata, ParsedDotprompt, ValidationResult } from './types'
+export { parseDotprompt, validateDotprompt } from './parser'
 
 /**
  * A Fetcher interface compatible with Cloudflare Workers service bindings and standard fetch API.
@@ -47,6 +52,8 @@ export namespace Teleprompter {
   export interface Prompt extends PromptInput {
     /** Version number of this prompt, increments with each update */
     version: number
+    /** Metadata extracted from dotprompt YAML frontmatter */
+    metadata?: PromptMetadata
   }
 
   /**
@@ -423,7 +430,8 @@ export namespace Teleprompter {
       if (prompt === null) {
         throw new Error(`Prompt '${id}' not found`)
       }
-      return Mustache.render(prompt?.prompt, ctx)
+      const { template } = parseDotprompt(prompt.prompt)
+      return Mustache.render(template, ctx)
     }
   }
 }
