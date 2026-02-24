@@ -5,7 +5,7 @@
  */
 
 import Mustache from 'mustache'
-import type { PromptMetadata, ParsedDotprompt, ValidationResult } from './types'
+import type { PromptMetadata } from './types'
 import { parseDotprompt } from './parser'
 
 export type { PromptMetadata, ParsedDotprompt, ValidationResult } from './types'

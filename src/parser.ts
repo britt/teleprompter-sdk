@@ -2,7 +2,11 @@ import { Dotprompt } from 'dotprompt'
 import YAML from 'yaml'
 import type { ParsedDotprompt, PromptMetadata, ValidationResult } from './types'
 
-const dp = new Dotprompt()
+let _dp: Dotprompt | undefined
+function getDp(): Dotprompt {
+  if (!_dp) _dp = new Dotprompt()
+  return _dp
+}
 
 /** Regex to detect frontmatter: opening ---, optional YAML content, closing --- */
 const frontmatterRegex = /^---[ \t]*(?:\r\n|\r|\n)([\s\S]*?)(?:\r\n|\r|\n)---[ \t]*(?:\r\n|\r|\n|$)/
@@ -29,11 +33,14 @@ export function parseDotprompt(source: string): ParsedDotprompt {
   }
 
   // Delegate to the dotprompt package for real frontmatter
+  const dp = getDp()
   let parsed: ReturnType<typeof dp.parse>
   try {
     parsed = dp.parse(source)
   } catch {
-    return { source, metadata: {}, template: source }
+    // Strip frontmatter even on parse failure so it doesn't leak into template output
+    const template = fmMatch ? source.slice(fmMatch[0].length) : source
+    return { source, metadata: {}, template }
   }
 
   const metadata: PromptMetadata = {}
