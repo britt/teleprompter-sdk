@@ -1,6 +1,6 @@
 {
   "name": "teleprompter-sdk",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "test": "bun test",
@@ -27,6 +27,8 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "mustache": "^4.2.0"
+    "dotprompt": "^1.1.2",
+    "mustache": "^4.2.0",
+    "yaml": "^2.8.2"
   }
 }

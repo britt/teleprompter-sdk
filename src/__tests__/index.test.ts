@@ -1,5 +1,6 @@
 import { describe, it, expect, mock } from 'bun:test'
 import { Teleprompter, Fetcher } from '../index'
+import type { PromptMetadata, ParsedDotprompt, ValidationResult } from '../types'
 
 describe('Teleprompter Utility Functions', () => {
   describe('DeleteMessage', () => {
@@ -31,6 +32,46 @@ describe('Teleprompter Utility Functions', () => {
         type: 'prompt-update'
       })
     })
+
+    it('should include metadata in the update message when present', () => {
+      const prompt: Teleprompter.Prompt = {
+        id: 'test-prompt',
+        prompt: '---\nmodel: test\n---\nContent',
+        version: 1,
+        metadata: { model: 'test' },
+      }
+
+      const message = Teleprompter.UpdateMessage(prompt)
+
+      expect(message).toEqual({
+        id: 'test-prompt',
+        prompt: '---\nmodel: test\n---\nContent',
+        version: 1,
+        metadata: { model: 'test' },
+        type: 'prompt-update',
+      })
+    })
+  })
+})
+
+describe('Teleprompter type re-exports', () => {
+  it('should have metadata as an optional field on Prompt', () => {
+    const prompt: Teleprompter.Prompt = {
+      id: 'test',
+      prompt: 'Hello',
+      version: 1,
+    }
+    expect(prompt.metadata).toBeUndefined()
+  })
+
+  it('should accept metadata on Prompt', () => {
+    const prompt: Teleprompter.Prompt = {
+      id: 'test',
+      prompt: '---\nmodel: test\n---\nHello',
+      version: 1,
+      metadata: { model: 'test' },
+    }
+    expect(prompt.metadata?.model).toBe('test')
   })
 })
 
@@ -394,6 +435,40 @@ describe('Teleprompter.HandleUpdates', () => {
     expect(mockKV.put).toHaveBeenCalledTimes(1)
     expect(mockKV.delete).toHaveBeenCalledTimes(1)
   })
+
+  it('should store metadata in KV when handling prompt-update', async () => {
+    const mockPrompt: Teleprompter.Prompt = {
+      id: 'prompt1',
+      prompt: '---\nmodel: test\n---\nHello',
+      version: 2,
+      metadata: { model: 'test' },
+    }
+
+    const mockBatch = {
+      messages: [
+        {
+          body: {
+            ...mockPrompt,
+            type: 'prompt-update' as const
+          }
+        }
+      ]
+    } as unknown as MessageBatch<Teleprompter.Messages.PromptUpdate | Teleprompter.Messages.PromptDelete>
+
+    const mockKV = {
+      put: mock(() => Promise.resolve(undefined)),
+      delete: mock(() => Promise.resolve(undefined))
+    } as unknown as KVNamespace
+
+    const env: Teleprompter.ENV = { PROMPTS: mockKV }
+    const ctx = {} as ExecutionContext
+
+    await Teleprompter.HandleUpdates(mockBatch, env, ctx)
+
+    const storedValue = (mockKV.put as any).mock.calls[0][1]
+    const parsed = JSON.parse(storedValue)
+    expect(parsed.metadata).toEqual({ model: 'test' })
+  })
 })
 
 describe('Teleprompter.KV', () => {
@@ -545,6 +620,28 @@ describe('Teleprompter.KV', () => {
       })
 
       expect(rendered).toBe('Items: Item 1, Item 2, ')
+    })
+
+    it('should strip frontmatter before rendering dotprompt templates', async () => {
+      const mockPrompt: Teleprompter.Prompt = {
+        id: 'dotprompt-test',
+        prompt: '---\nmodel: test/model\n---\nHello {{name}}!',
+        version: 1,
+        metadata: { model: 'test/model' },
+      }
+
+      const mockKV = {
+        get: mock(() => Promise.resolve(mockPrompt))
+      } as unknown as KVNamespace
+
+      const env: Teleprompter.ENV = { PROMPTS: mockKV }
+      const kv = new Teleprompter.KV(env)
+
+      const rendered = await kv.render('dotprompt-test', { name: 'World' })
+
+      expect(rendered).toBe('Hello World!')
+      expect(rendered).not.toContain('---')
+      expect(rendered).not.toContain('model:')
     })
   })
 })

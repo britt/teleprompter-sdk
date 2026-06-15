@@ -4,6 +4,25 @@ Teleprompter SDK is a TypeScript/JavaScript client library that enables develope
 
 ## Concepts
 
+### Dotprompt format
+Prompts are stored as dotprompt templates: a YAML frontmatter block followed by a Handlebars template body. The frontmatter declares model configuration, input/output schemas, and other metadata. The template body uses Handlebars (Mustache-compatible) syntax for variable interpolation. Plain templates without frontmatter are still fully supported for backward compatibility.
+
+```
+---
+model: anthropic/claude-sonnet-4-20250514
+config:
+  temperature: 0.3
+input:
+  schema:
+    code: string
+output:
+  format: json
+  schema:
+    summary: string
+---
+Analyze this {{code}} and provide a summary.
+```
+
 ### Immutable updates
 - Prompts are versioned and append-only. Each write creates a new version; existing versions never change.
 - You can list a prompt’s history with `getPromptVersions(id)` and target a prior version with `rollbackPrompt(id, version)`.
@@ -37,7 +56,7 @@ export default {
 ```
 
 ### Caching
-- The KV client reads prompt data by ID and renders with Mustache at the edge for low latency.
+- The KV client reads prompt data by ID and renders the template at the edge for low latency.
 - Cloudflare KV is eventually consistent; updates propagate quickly but are not instantaneous. Design caches to tolerate brief propagation delays.
 - If you add an application cache, key entries by `id` and `version`. Evict or refresh when a newer version is written. The SDK does not add an extra in-memory cache.
 
@@ -54,7 +73,7 @@ The `HTTP` client is designed to interact with a Teleprompter REST API server. I
 - In backend services, CI pipelines, or anywhere you want programmatic access to Teleprompter's HTTP API.
 
 ### 2. KV Client
-The `KV` client wraps access to a Cloudflare KV namespace that stores prompt templates. It is focused on scenarios where you want fast, serverless environment interpolation and rendering. The client seamlessly integrates with Mustache to interpolate variables directly on the edge, returning the generated prompt text.
+The `KV` client wraps access to a Cloudflare KV namespace that stores prompt templates. It is focused on scenarios where you want fast, serverless environment interpolation and rendering. The client strips any dotprompt frontmatter and uses Mustache to interpolate variables directly on the edge, returning the generated prompt text.
 
 #### When should you use the KV client?
 - When deploying prompt templates for use in Cloudflare Workers, edge runtimes, or similar environments.
@@ -117,7 +136,7 @@ const client = new Teleprompter.HTTP(env.API);
 
 ### Rendering Prompts from KV
 
-The `KV` client allows you to fetch templates from a Cloudflare KV namespace and render them directly with runtime context using Mustache.
+The `KV` client allows you to fetch templates from a Cloudflare KV namespace and render them directly with runtime context using Mustache. If the stored template includes dotprompt frontmatter, `render()` automatically strips it before rendering, so you always get clean output text.
 
 ```ts
 const kv = new Teleprompter.KV(env);
@@ -125,6 +144,27 @@ const output = await kv.render('welcome-email', { name: 'Ada' });
 ```
 
 This looks up the `welcome-email` prompt template in the `PROMPTS` namespace and renders it with the supplied context, returning the final text. This is ideal for edge/serverless workloads.
+
+---
+
+### Parser Utilities
+
+The SDK exports `parseDotprompt()` and `validateDotprompt()` for working with dotprompt sources directly.
+
+```ts
+import { parseDotprompt, validateDotprompt } from 'teleprompter-sdk'
+
+// Parse a dotprompt source into metadata and template
+const { metadata, template } = parseDotprompt(source)
+
+// Validate frontmatter before writing
+const validation = validateDotprompt(source)
+if (!validation.valid) {
+  console.error(validation.error)
+}
+```
+
+`parseDotprompt(source)` splits a dotprompt string into its YAML `metadata` and Handlebars `template` body. `validateDotprompt(source)` checks that the frontmatter is well-formed YAML and returns `{ valid, error }`. Both functions work with plain templates that have no frontmatter — `metadata` will be an empty object and `template` will be the full source.
 
 ---
 
