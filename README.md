@@ -38,7 +38,7 @@ The parser accepts empty frontmatter and handles LF and CRLF line endings. `vali
 - Versions are assigned automatically by the service; clients do not choose version numbers.
 
 ### Update messaging
-- For queue based workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version, metadata })` and deletions with `Teleprompter.DeleteMessage(id)`.
+- For queue workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version, metadata })` and deletions with `Teleprompter.DeleteMessage(id)`.
 - `Teleprompter.Prompt` may include optional `metadata` extracted from dotprompt frontmatter.
 - A queue consumer applies changes by calling `Teleprompter.HandleUpdates(batch, env, ctx)`, which preserves prompt metadata when it writes updates to the `PROMPTS` KV namespace or deletes keys.
 - Running applications that read from KV see the latest prompt on their next fetch; no restart is required.
@@ -81,11 +81,11 @@ The `HTTP` client is designed to interact with a Teleprompter REST API server. I
 - In backend services, CI pipelines, or anywhere you want programmatic access to Teleprompter's HTTP API.
 
 ### 2. KV Client
-The `KV` client wraps access to a Cloudflare KV namespace that stores prompt templates. It is focused on scenarios where you want fast, serverless environment interpolation and rendering. `KV.render()` strips dotprompt frontmatter before Mustache rendering and returns only the rendered template text. This behavior supports dotprompt templates and preserves the existing result for plain templates.
+The `KV` client wraps access to a Cloudflare KV namespace that stores prompt templates. It is focused on scenarios where you want fast serverless environment interpolation and rendering. `KV.render()` strips dotprompt frontmatter before Mustache rendering and returns only the rendered template text. This behavior supports dotprompt templates and preserves the existing result for plain templates.
 
 #### When should you use the KV client?
 - When deploying prompt templates for use in Cloudflare Workers, edge runtimes, or similar environments.
-- For ultra-low latency, low-overhead rendering of prompts with runtime data.
+- For fast rendering of prompts with runtime data.
 - As a companion to the HTTP registry: prompts may be published from HTTP to KV for global, performant access.
 
 This dual-client approach gives you flexibility to manage, distribute, and consume LLM prompts in a way that matches your architecture and runtime needs.
@@ -188,7 +188,7 @@ if (!validation.valid) {
 
 `parseDotprompt(source)` returns `{ source, metadata, template }`. It preserves the original source, extracts supported metadata fields, and returns only the template body for rendering. For plain templates without frontmatter, it returns empty metadata and the full source as the template.
 
-`validateDotprompt(source)` returns `{ valid, error? }`. It accepts empty frontmatter, rejects malformed YAML, and rejects frontmatter values that resolve to a scalar or array instead of a mapping.
+`validateDotprompt(source)` returns `{ valid, error? }`. It accepts empty frontmatter, rejects malformed YAML, and rejects frontmatter values that are not key value objects.
 
 #### Metadata related public types
 
@@ -205,7 +205,7 @@ if (!validation.valid) {
 - `bun test --coverage` – Run tests with coverage report
 - `bun run docs` – Generate TypeDoc documentation to the `docs/` folder
 
-Continuous integration runs `bun test`, runs `bun test --coverage`, and runs `bun run build` on every pull request. The coverage threshold is set to 85% line coverage in `bunfig.toml`, and the GitHub Actions workflow enforces that threshold by running the coverage command during CI.
+Continuous integration runs `bun test`, `bun test --coverage`, and `bun run build` on every pull request. The coverage threshold is set to 85% line coverage in `bunfig.toml`, and the GitHub Actions workflow enforces that threshold by running the coverage command during CI.
 
 ---
 
@@ -228,7 +228,7 @@ Run coverage:
 bun test --coverage
 ```
 
-CI enforces an 85% line coverage threshold. `bunfig.toml` defines the threshold, and the GitHub Actions workflow enforces it during pull request validation.
+The coverage command must meet the 85% line coverage threshold defined in `bunfig.toml`.
 
 Generate documentation:
 ```bash
