@@ -5,7 +5,9 @@ Teleprompter SDK is a TypeScript/JavaScript client library that enables develope
 ## Concepts
 
 ### Dotprompt format
-Prompts are stored as dotprompt templates: a YAML frontmatter block followed by a Handlebars template body. The frontmatter declares model configuration, input/output schemas, and other metadata. The template body uses Handlebars (Mustache-compatible) syntax for variable interpolation. Plain templates without frontmatter are still fully supported for backward compatibility.
+Prompts may use dotprompt format: a YAML frontmatter block followed by a Handlebars template body. The template body remains Mustache compatible for variable interpolation. Frontmatter may define `model`, `config`, `input`, `output`, `tools`, `description`, and `ext` metadata.
+
+Plain templates without frontmatter remain fully supported. `parseDotprompt()` returns empty metadata and the full source as the template when a prompt does not include frontmatter.
 
 ```
 ---
@@ -23,6 +25,8 @@ output:
 Analyze this {{code}} and provide a summary.
 ```
 
+The parser accepts empty frontmatter and handles LF and CRLF line endings. `validateDotprompt()` detects malformed frontmatter before storage or publication. If frontmatter parsing fails, the SDK still removes the frontmatter block before rendering so YAML never appears in rendered prompt output.
+
 ### Immutable updates
 - Prompts are versioned and append-only. Each write creates a new version; existing versions never change.
 - You can list a prompt’s history with `getPromptVersions(id)` and target a prior version with `rollbackPrompt(id, version)`.
@@ -34,16 +38,20 @@ Analyze this {{code}} and provide a summary.
 - Versions are assigned automatically by the service; clients do not choose version numbers.
 
 ### Update messaging
-- For queue-based workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version })` and deletions with `Teleprompter.DeleteMessage(id)`.
-- A queue consumer applies changes by calling `Teleprompter.HandleUpdates(batch, env, ctx)`, which writes updates to the `PROMPTS` KV namespace or deletes keys.
+- For queue based workflows, publish updates with `Teleprompter.UpdateMessage({ id, prompt, version, metadata })` and deletions with `Teleprompter.DeleteMessage(id)`.
+- `Teleprompter.Prompt` may include optional `metadata` extracted from dotprompt frontmatter.
+- A queue consumer applies changes by calling `Teleprompter.HandleUpdates(batch, env, ctx)`, which preserves prompt metadata when it writes updates to the `PROMPTS` KV namespace or deletes keys.
 - Running applications that read from KV see the latest prompt on their next fetch; no restart is required.
 
 ```ts
 // Publish an update
 const msg = Teleprompter.UpdateMessage({
   id: 'welcome-email',
-  prompt: 'Welcome, {{name}}!',
-  version: 1731166505 // UNIX timestamp (UTC)
+  prompt: '---\nmodel: anthropic/claude-sonnet-4-20250514\n---\nWelcome, {{name}}!',
+  version: 1731166505, // UNIX timestamp (UTC)
+  metadata: {
+    model: 'anthropic/claude-sonnet-4-20250514'
+  }
 })
 await queue.send(msg)
 
@@ -73,7 +81,7 @@ The `HTTP` client is designed to interact with a Teleprompter REST API server. I
 - In backend services, CI pipelines, or anywhere you want programmatic access to Teleprompter's HTTP API.
 
 ### 2. KV Client
-The `KV` client wraps access to a Cloudflare KV namespace that stores prompt templates. It is focused on scenarios where you want fast, serverless environment interpolation and rendering. The client strips any dotprompt frontmatter and uses Mustache to interpolate variables directly on the edge, returning the generated prompt text.
+The `KV` client wraps access to a Cloudflare KV namespace that stores prompt templates. It is focused on scenarios where you want fast, serverless environment interpolation and rendering. `KV.render()` strips dotprompt frontmatter before Mustache rendering and returns only the rendered template text. This behavior supports dotprompt templates and preserves the existing result for plain templates.
 
 #### When should you use the KV client?
 - When deploying prompt templates for use in Cloudflare Workers, edge runtimes, or similar environments.
@@ -136,14 +144,14 @@ const client = new Teleprompter.HTTP(env.API);
 
 ### Rendering Prompts from KV
 
-The `KV` client allows you to fetch templates from a Cloudflare KV namespace and render them directly with runtime context using Mustache. If the stored template includes dotprompt frontmatter, `render()` automatically strips it before rendering, so you always get clean output text.
+The `KV` client allows you to fetch templates from a Cloudflare KV namespace and render them directly with runtime context using Mustache. If the stored template includes dotprompt frontmatter, `render()` strips it before rendering and returns only the rendered template text. Plain templates continue to render without any behavior change.
 
 ```ts
 const kv = new Teleprompter.KV(env);
 const output = await kv.render('welcome-email', { name: 'Ada' });
 ```
 
-This looks up the `welcome-email` prompt template in the `PROMPTS` namespace and renders it with the supplied context, returning the final text. This is ideal for edge/serverless workloads.
+This looks up the `welcome-email` prompt template in the `PROMPTS` namespace, removes any frontmatter, and renders the template body with the supplied context. This is ideal for edge/serverless workloads.
 
 ---
 
@@ -154,17 +162,39 @@ The SDK exports `parseDotprompt()` and `validateDotprompt()` for working with do
 ```ts
 import { parseDotprompt, validateDotprompt } from 'teleprompter-sdk'
 
-// Parse a dotprompt source into metadata and template
-const { metadata, template } = parseDotprompt(source)
+// Parse a dotprompt source into source, metadata, and template
+const parsed = parseDotprompt(`---
+model: anthropic/claude-sonnet-4-20250514
+description: Welcome message
+---
+Welcome, {{name}}!`)
+
+console.log(parsed.source)
+console.log(parsed.metadata.model)
+console.log(parsed.template)
 
 // Validate frontmatter before writing
-const validation = validateDotprompt(source)
+const validation = validateDotprompt(`---
+model: anthropic/claude-sonnet-4-20250514
+output:
+  format: json
+---
+Welcome, {{name}}!`)
+
 if (!validation.valid) {
   console.error(validation.error)
 }
 ```
 
-`parseDotprompt(source)` splits a dotprompt string into its YAML `metadata` and Handlebars `template` body. `validateDotprompt(source)` checks that the frontmatter is well-formed YAML and returns `{ valid, error }`. Both functions work with plain templates that have no frontmatter — `metadata` will be an empty object and `template` will be the full source.
+`parseDotprompt(source)` returns `{ source, metadata, template }`. It preserves the original source, extracts supported metadata fields, and returns only the template body for rendering. For plain templates without frontmatter, it returns empty metadata and the full source as the template.
+
+`validateDotprompt(source)` returns `{ valid, error? }`. It accepts empty frontmatter, rejects malformed YAML, and rejects frontmatter values that resolve to a scalar or array instead of a mapping.
+
+#### Metadata related public types
+
+- `PromptMetadata` describes the optional metadata fields that the SDK extracts from dotprompt frontmatter and stores with a prompt.
+- `ParsedDotprompt` describes the parsed result returned by `parseDotprompt()`, including the original source, extracted metadata, and template body.
+- `ValidationResult` describes the validation result returned by `validateDotprompt()`, including whether the source is valid and any validation error.
 
 ---
 
@@ -175,7 +205,7 @@ if (!validation.valid) {
 - `bun test --coverage` – Run tests with coverage report
 - `bun run docs` – Generate TypeDoc documentation to the `docs/` folder
 
-Continuous integration automatically runs tests on every pull request.
+Continuous integration runs `bun test`, runs `bun test --coverage`, and runs `bun run build` on every pull request. The coverage threshold is set to 85% line coverage in `bunfig.toml`, and the GitHub Actions workflow enforces that threshold by running the coverage command during CI.
 
 ---
 
@@ -192,6 +222,13 @@ Run tests:
 ```bash
 bun test
 ```
+
+Run coverage:
+```bash
+bun test --coverage
+```
+
+CI enforces an 85% line coverage threshold. `bunfig.toml` defines the threshold, and the GitHub Actions workflow enforces it during pull request validation.
 
 Generate documentation:
 ```bash
