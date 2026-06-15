@@ -223,12 +223,12 @@ Run tests:
 bun test
 ```
 
-Run coverage:
+Run the coverage check:
 ```bash
 bun test --coverage
 ```
 
-The coverage command must meet the 85% line coverage threshold defined in `bunfig.toml`.
+The coverage check must meet the 85% line coverage threshold defined in `bunfig.toml`.
 
 Generate documentation:
 ```bash
